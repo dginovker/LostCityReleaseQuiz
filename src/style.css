@@ -1,0 +1,49 @@
+/* 2004scape global styles — hand-written, no Tailwind */
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background: #000;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: #FFE139;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Outset borders */
+.b {
+  border-style: outset;
+  border-width: 3pt;
+  border-color: #373737;
+}
+.b2 {
+  border-style: outset;
+  border-width: 3pt;
+  border-color: #570700;
+}
+.e {
+  border: 2px solid #382418;
+}
+
+/* Color utilities */
+.green { color: #04A800; }
+.yellow { color: #FFE139; }
+.red { color: #E10505; }
+.white { color: #FFF; }
+.orange { color: #ffbb22; }
+
+/* Stone background */
+.stone-bg {
+  background: url('/img/stoneback.gif');
+}
