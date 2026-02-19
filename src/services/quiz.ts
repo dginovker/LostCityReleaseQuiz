@@ -7,6 +7,7 @@ export interface ContentEntry {
   category: string
   releaseDate: string
   image: string
+  wikiLength?: number
 }
 
 const allContent: ContentEntry[] = contentData as ContentEntry[]
@@ -16,7 +17,13 @@ export function getDifficulty(a: ContentEntry, b: ContentEntry): number {
   const dA = new Date(a.releaseDate).getTime()
   const dB = new Date(b.releaseDate).getTime()
   const days = Math.abs(dA - dB) / (1000 * 60 * 60 * 24)
-  return 1 / (1 + days / 30)
+  const dateDifficulty = 1 / (1 + days / 30)
+
+  if (a.wikiLength == null || b.wikiLength == null) return dateDifficulty
+
+  const minLength = Math.min(a.wikiLength, b.wikiLength)
+  const obscurity = 1 / (1 + minLength / 5000)
+  return 0.7 * dateDifficulty + 0.3 * obscurity
 }
 
 /** Map ELO to a preferred difficulty tier index (0-4) */
