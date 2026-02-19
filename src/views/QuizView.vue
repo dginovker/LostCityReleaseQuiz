@@ -8,15 +8,19 @@
 
     <div class="cards-row">
       <ContentCard
+        ref="card0"
         :entry="pair[0]"
         :revealed="revealed"
         :is-correct="revealed ? correctIndex === 0 : null"
+        :focused="!revealed && focusedIndex === 0"
         @pick="onPick(0)"
       />
       <ContentCard
+        ref="card1"
         :entry="pair[1]"
         :revealed="revealed"
         :is-correct="revealed ? correctIndex === 1 : null"
+        :focused="!revealed && focusedIndex === 1"
         @pick="onPick(1)"
       />
     </div>
@@ -24,7 +28,7 @@
     <div v-if="revealed" style="text-align:center;margin-top:8px">
       <p :class="lastCorrect ? 'green' : 'red'" style="font-weight:bold">
         {{ lastCorrect ? 'Correct!' : 'Wrong!' }}
-        <span class="white">({{ lastPoints >= 0 ? '+' : '' }}{{ lastPoints }} pts)</span>
+        <span class="white">({{ eloDelta >= 0 ? '+' : '' }}{{ eloDelta }} ELO)</span>
       </p>
       <button class="next-btn b" @click="nextRound">Next &gt;</button>
     </div>
@@ -32,17 +36,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameState } from '../composables/useGameState'
 import { auth } from '../firebase'
 import { selectPair, getDifficulty, _testOverridePair, getContentById } from '../services/quiz'
 import type { ContentEntry } from '../services/quiz'
-import { calculateElo, calculatePoints, isCorrect } from '../services/scoring'
+import { calculateElo, isCorrect } from '../services/scoring'
 import MainLayout from '../layouts/MainLayout.vue'
 import GameHud from '../components/GameHud.vue'
 import ContentCard from '../components/ContentCard.vue'
 
-const { elo, currentStreak, bestStreak, gamesPlayed, correctAnswers, sessionScore, readyPromise, recordAnswer } = useGameState()
+const { elo, currentStreak, bestStreak, gamesPlayed, correctAnswers, readyPromise, recordAnswer } = useGameState()
 
 const pair = ref<[ContentEntry, ContentEntry]>([
   { id: '', name: '', category: '', releaseDate: '', image: '' },
@@ -51,12 +55,22 @@ const pair = ref<[ContentEntry, ContentEntry]>([
 const revealed = ref(false)
 const correctIndex = ref(0)
 const lastCorrect = ref(false)
-const lastPoints = ref(0)
+const eloDelta = ref(0)
+const focusedIndex = ref(-1)
+const card0 = ref<InstanceType<typeof ContentCard> | null>(null)
+const card1 = ref<InstanceType<typeof ContentCard> | null>(null)
 
 const previousPairs = new Set<string>()
 
+function clearCardGlow() {
+  card0.value?.$el?.style.removeProperty('border-color')
+  card1.value?.$el?.style.removeProperty('border-color')
+}
+
 function newPair() {
   revealed.value = false
+  focusedIndex.value = -1
+  clearCardGlow()
   pair.value = selectPair(elo.value, previousPairs)
   const key = [pair.value[0].id, pair.value[1].id].sort().join('|')
   previousPairs.add(key)
@@ -79,22 +93,38 @@ function onPick(index: number) {
   correctIndex.value = dateA === dateB ? index : (dateA < dateB ? 0 : 1)
 
   const newElo = calculateElo(elo.value, diff, won)
-  const streak = won ? currentStreak.value + 1 : 0
-  const pts = calculatePoints(diff, won, won ? streak : currentStreak.value)
+  eloDelta.value = newElo - elo.value
 
   lastCorrect.value = won
-  lastPoints.value = pts
   revealed.value = true
 
-  recordAnswer(won, pts, newElo)
+  recordAnswer(won, newElo)
 }
 
 function nextRound() {
   newPair()
 }
 
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    focusedIndex.value = 0
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    focusedIndex.value = 1
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    if (revealed.value) {
+      nextRound()
+    } else if (focusedIndex.value >= 0) {
+      onPick(focusedIndex.value)
+    }
+  }
+}
+
 onMounted(() => {
   newPair()
+  window.addEventListener('keydown', onKeyDown)
 
   if (import.meta.env.DEV) {
     ;(window as any).__testApi = {
@@ -114,7 +144,6 @@ onMounted(() => {
           uid: auth.currentUser?.uid ?? '',
           elo: elo.value,
           streak: currentStreak.value,
-          score: sessionScore.value,
           gamesPlayed: gamesPlayed.value,
           correctAnswers: correctAnswers.value,
           bestStreak: bestStreak.value,
@@ -124,6 +153,10 @@ onMounted(() => {
       },
     }
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown)
 })
 </script>
 

@@ -5,13 +5,12 @@
       Streak: <span class="yellow">{{ currentStreak }}</span>
       <span v-if="currentStreak >= 5" class="streak-fire">🔥</span>
     </span>
-    <span>Score: <span class="yellow">{{ sessionScore }}</span></span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useGameState } from '../composables/useGameState'
-const { elo, currentStreak, sessionScore } = useGameState()
+const { elo, currentStreak } = useGameState()
 </script>
 
 <style scoped>

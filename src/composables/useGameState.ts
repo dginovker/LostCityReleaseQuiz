@@ -8,7 +8,6 @@ const currentStreak = ref(0)
 const bestStreak = ref(0)
 const gamesPlayed = ref(0)
 const correctAnswers = ref(0)
-const sessionScore = ref(0)
 const ready = ref(false)
 
 let uid = ''
@@ -37,10 +36,9 @@ function init() {
   })
 }
 
-function recordAnswer(correct: boolean, points: number, newElo: number) {
+function recordAnswer(correct: boolean, newElo: number) {
   elo.value = newElo
   currentStreak.value = correct ? currentStreak.value + 1 : 0
-  sessionScore.value += points
   gamesPlayed.value++
   if (correct) correctAnswers.value++
   if (currentStreak.value > bestStreak.value) bestStreak.value = currentStreak.value
@@ -58,5 +56,5 @@ function recordAnswer(correct: boolean, points: number, newElo: number) {
 
 export function useGameState() {
   init()
-  return { elo, currentStreak, bestStreak, gamesPlayed, correctAnswers, sessionScore, ready, readyPromise, recordAnswer }
+  return { elo, currentStreak, bestStreak, gamesPlayed, correctAnswers, ready, readyPromise, recordAnswer }
 }

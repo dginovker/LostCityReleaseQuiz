@@ -77,11 +77,14 @@ async function batchFetchWikitext(titles: string[]): Promise<Map<string, string>
       const data = await apiFetch({
         action: 'query',
         titles: batch.join('|'),
+        redirects: '',
         prop: 'revisions',
         rvprop: 'content',
         rvslots: 'main',
       }) as {
         query: {
+          redirects?: { from: string; to: string }[];
+          normalized?: { from: string; to: string }[];
           pages: Record<string, {
             title: string;
             revisions?: [{ slots: { main: { '*': string } } }];
@@ -89,9 +92,26 @@ async function batchFetchWikitext(titles: string[]): Promise<Map<string, string>
         };
       };
 
+      // Build reverse maps: resolved title -> original queried title
+      const toOriginal = new Map<string, string>();
+      for (const t of batch) toOriginal.set(t, t);
+      if (data.query.normalized) {
+        for (const { from, to } of data.query.normalized) {
+          toOriginal.set(to, toOriginal.get(from) ?? from);
+        }
+      }
+      if (data.query.redirects) {
+        for (const { from, to } of data.query.redirects) {
+          toOriginal.set(to, toOriginal.get(from) ?? from);
+        }
+      }
+
       for (const page of Object.values(data.query.pages)) {
         const content = page.revisions?.[0]?.slots?.main?.['*'];
-        if (content) result.set(page.title, content);
+        if (content) {
+          const originalTitle = toOriginal.get(page.title) ?? page.title;
+          result.set(originalTitle, content);
+        }
       }
     } catch (err) {
       console.warn(`  Batch ${Math.floor(i / 50) + 1} failed:`, (err as Error).message);
@@ -199,8 +219,75 @@ async function main() {
       }
     }
 
-    console.log(`Resolved ${Object.keys(filenameMap).length} image filenames from OSRS wiki`);
-    console.log(`Found ${Object.keys(filenameMap).length} OSRS images`);
+    const exactMatchCount = Object.keys(filenameMap).length;
+    console.log(`Exact matches: ${exactMatchCount} image filenames from OSRS wiki`);
+
+    // --- Fuzzy search fallback for unmatched titles ---
+    const resolvedTitles = new Set<string>();
+    for (const [title, wikitext] of wikitexts) {
+      if (parseImage(wikitext) && titleToIds.has(title)) resolvedTitles.add(title);
+    }
+    const unmatchedTitles = uniqueTitles.filter(t => !resolvedTitles.has(t));
+    console.log(`Fuzzy searching ${unmatchedTitles.length} unmatched titles...`);
+
+    let fuzzyCount = 0;
+    for (const title of unmatchedTitles) {
+      try {
+        await sleep(API_DELAY_MS);
+        const data = await apiFetch({
+          action: 'query',
+          list: 'search',
+          srsearch: title,
+          srlimit: '1',
+        }) as { query: { search: { title: string }[] } };
+
+        const hit = data.query.search[0];
+        if (!hit) continue;
+
+        // Similarity check: the search result must share significant words with the query
+        const queryWords = new Set(title.toLowerCase().replace(/[()]/g, '').split(/\s+/).filter(w => w.length > 2));
+        const hitWords = new Set(hit.title.toLowerCase().replace(/[()]/g, '').split(/\s+/).filter(w => w.length > 2));
+        const overlap = [...queryWords].filter(w => hitWords.has(w)).length;
+        if (queryWords.size === 0 || overlap / queryWords.size < 0.5) continue;
+
+        await sleep(API_DELAY_MS);
+        const pageData = await apiFetch({
+          action: 'query',
+          titles: hit.title,
+          prop: 'revisions',
+          rvprop: 'content',
+          rvslots: 'main',
+        }) as {
+          query: {
+            pages: Record<string, {
+              title: string;
+              revisions?: [{ slots: { main: { '*': string } } }];
+            }>;
+          };
+        };
+
+        for (const page of Object.values(pageData.query.pages)) {
+          const content = page.revisions?.[0]?.slots?.main?.['*'];
+          if (!content) continue;
+          const imageFile = parseImage(content);
+          if (!imageFile) continue;
+          const entryIds = titleToIds.get(title);
+          if (!entryIds) continue;
+          for (const id of entryIds) {
+            filenameMap[id] = imageFile;
+          }
+          fuzzyCount++;
+          if (fuzzyCount % 50 === 0) {
+            console.log(`  Fuzzy resolved ${fuzzyCount} so far...`);
+          }
+        }
+      } catch (err) {
+        console.warn(`  Fuzzy search failed for "${title}":`, (err as Error).message);
+      }
+    }
+
+    console.log(`Fuzzy matches: ${fuzzyCount} image filenames from search fallback`);
+    console.log(`Total resolved: ${Object.keys(filenameMap).length} image filenames`);
 
     // --- Phase 2: Query imageinfo to get direct image URLs ---
     const uniqueFiles = [...new Set(Object.values(filenameMap))];
@@ -316,8 +403,14 @@ async function main() {
       contentUpdated++;
     }
   }
+
+  // Stamp imageSource from manifest onto every entry
+  for (const entry of entries) {
+    (entry as any).imageSource = manifest[entry.id]?.source ?? null;
+  }
+
+  fs.writeFileSync(CONTENT_FILE, JSON.stringify(entries, null, 2));
   if (contentUpdated > 0) {
-    fs.writeFileSync(CONTENT_FILE, JSON.stringify(entries, null, 2));
     console.log(`Updated ${contentUpdated} entries in content.json with new images`);
   }
 

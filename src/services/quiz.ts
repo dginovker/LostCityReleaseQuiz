@@ -8,10 +8,11 @@ export interface ContentEntry {
   releaseDate: string
   image: string
   wikiLength?: number
+  imageSource?: string
 }
 
 const allContent: ContentEntry[] = (contentData as ContentEntry[])
-  .filter(e => e.category !== 'music' && e.image)
+  .filter(e => e.category !== 'music' && e.image && e.imageSource !== 'oldest')
 
 const nonClueContent: ContentEntry[] = allContent.filter(e => !/^clue scroll/i.test(e.name))
 

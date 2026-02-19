@@ -24,7 +24,7 @@ test('correct answer updates streak', async ({ page }) => {
 
   const state = await getState(page)
   expect(state.streak).toBe(1)
-  expect(state.score).toBeGreaterThan(0)
+  expect(state.elo).toBeGreaterThan(1200)
 })
 
 test('same-day correct answer increases ELO', async ({ page }) => {

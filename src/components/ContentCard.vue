@@ -20,12 +20,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ContentEntry } from '../services/quiz'
-import { redglow, unglow } from '../glow'
 
 const props = defineProps<{
   entry: ContentEntry
   revealed: boolean
   isCorrect: boolean | null
+  focused: boolean
 }>()
 
 defineEmits<{ pick: [] }>()
@@ -38,15 +38,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 const categoryColor = computed(() => CATEGORY_COLORS[props.entry.category] || 'white')
 
 const cardClass = computed(() => {
-  if (!props.revealed) return 'card-interactive'
+  if (!props.revealed) return props.focused ? 'card-interactive card-focused' : 'card-interactive'
   return props.isCorrect ? 'card-correct' : 'card-incorrect'
 })
 
 function onHover(e: MouseEvent) {
-  if (!props.revealed) redglow(e.currentTarget as HTMLElement)
+  if (!props.revealed) (e.currentTarget as HTMLElement).style.borderColor = '#ff3030'
 }
 function onLeave(e: MouseEvent) {
-  if (!props.revealed) unglow(e.currentTarget as HTMLElement)
+  if (!props.revealed) (e.currentTarget as HTMLElement).style.borderColor = ''
 }
 
 function formatDate(d: string): string {
@@ -75,6 +75,7 @@ function formatDate(d: string): string {
   }
 }
 .card-interactive { cursor: pointer; }
+.card-focused { border-color: #ff3030 !important; }
 .card-correct { border-color: #04A800 !important; }
 .card-incorrect { border-color: #E10505 !important; }
 

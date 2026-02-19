@@ -1,28 +1,27 @@
 import { test, expect } from '@playwright/test'
-import { clearFirestore, forceNewRound, getState, gotoReady, SAME_DAY_A, SAME_DAY_B } from './helpers'
+import { clearFirestore, forceNewRound, getState, gotoReady, clickNext, SAME_DAY_A, SAME_DAY_B, EARLY, LATE } from './helpers'
 
 test.beforeEach(async () => { await clearFirestore() })
 
-test('streak multiplier kicks in at 5 and resets on wrong answer', async ({ page }) => {
+test('streak increments on correct answers and resets on wrong answer', async ({ page }) => {
   await gotoReady(page)
 
-  // Use same-day pair for consistent difficulty (1.0) and guaranteed correct answer
-  const scores: number[] = []
-
-  for (let i = 0; i < 6; i++) {
-    await forceNewRound(page, SAME_DAY_A.id, SAME_DAY_B.id)
-    const before = await getState(page)
+  // Get 3 correct in a row
+  for (let i = 0; i < 3; i++) {
+    await forceNewRound(page, EARLY.id, LATE.id)
     await page.locator('[data-testid="content-card"]').first().click()
-    const after = await getState(page)
-    scores.push(after.score - before.score)
+    if (i < 2) await clickNext(page)
   }
 
-  // Answers 1-4: 1x multiplier, answer 5+: 2x multiplier
-  const base = scores[0]
-  expect(base).toBeGreaterThan(0)
-  expect(scores[4]).toBe(base * 2) // streak 5, 2x
-  expect(scores[5]).toBe(base * 2) // streak 6, 2x
+  const afterCorrect = await getState(page)
+  expect(afterCorrect.streak).toBe(3)
 
-  const state = await getState(page)
-  expect(state.streak).toBe(6)
+  await clickNext(page)
+
+  // Get one wrong
+  await forceNewRound(page, EARLY.id, LATE.id)
+  await page.locator('[data-testid="content-card"]').nth(1).click()
+
+  const afterWrong = await getState(page)
+  expect(afterWrong.streak).toBe(0)
 })
