@@ -146,7 +146,7 @@ async function main() {
   const targetIds = new Set<string>();
 
   for (const [id, v] of Object.entries(manifest)) {
-    if (v.source === 'oldest') targetIds.add(id);
+    if (v.source !== 'osrs') targetIds.add(id);
   }
   for (const entry of entries) {
     if (!entry.image) targetIds.add(entry.id);

@@ -2,7 +2,7 @@ const K = 32
 
 /** Calculate new ELO after answering a pair with given difficulty */
 export function calculateElo(currentElo: number, difficulty: number, won: boolean): number {
-  const opponentRating = difficulty * 2000
+  const opponentRating = 800 + difficulty * 800
   const expected = 1 / (1 + Math.pow(10, (opponentRating - currentElo) / 400))
   const actual = won ? 1 : 0
   const delta = K * (actual - expected)
@@ -21,9 +21,9 @@ export function getStreakMultiplier(streak: number): number {
 /** Calculate points earned/lost */
 export function calculatePoints(difficulty: number, won: boolean, streak: number): number {
   if (won) {
-    return Math.max(10, Math.round(difficulty * 100)) * getStreakMultiplier(streak)
+    return Math.max(50, Math.round(difficulty * 200)) * getStreakMultiplier(streak)
   }
-  return -Math.max(5, Math.round(difficulty * 50))
+  return -Math.max(10, Math.round(difficulty * 75))
 }
 
 /** Check if an answer is correct. Same-day = either answer is correct. */

@@ -26,7 +26,7 @@
 
       <!-- Footer -->
       <div class="footer">
-        <span class="white">Fan project &mdash; not affiliated with Jagex</span>
+        <span class="white">Fan project - Visit <a href="https://lostcity.rs" target="_blank" rel="noopener">LostCity.rs</a> for more</span>
       </div>
 
     </div>
