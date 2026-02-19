@@ -3,9 +3,10 @@ import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: 'demo-key',
-  authDomain: 'lostcity-quiz.firebaseapp.com',
-  projectId: 'lostcity-quiz',
+  apiKey: 'AIzaSyCujvHA71n_ue57JrUhCQvRcdT7azZOwlY',
+  authDomain: 'rshistoryquiz.firebaseapp.com',
+  projectId: 'rshistoryquiz',
+  appId: '1:709279364806:web:2a54780bcaa22d68d449c7',
 }
 
 const app = initializeApp(firebaseConfig)

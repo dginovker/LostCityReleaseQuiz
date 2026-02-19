@@ -97,8 +97,28 @@ function onPick(index: number) {
 
   lastCorrect.value = won
   revealed.value = true
+  if (won) spawnConfetti()
 
   recordAnswer(won, newElo)
+}
+
+function spawnConfetti() {
+  const colors = ['#04A800', '#FFE139', '#ff3030', '#39c0ff', '#ff9900', '#ffffff']
+  const container = document.querySelector('.cards-row') as HTMLElement
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  for (let i = 0; i < 30; i++) {
+    const el = document.createElement('div')
+    el.className = 'confetti-particle'
+    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]!
+    el.style.left = (rect.left + rect.width / 2) + 'px'
+    el.style.top = (rect.top + rect.height / 2) + 'px'
+    el.style.setProperty('--dx', (Math.random() - 0.5) * 300 + 'px')
+    el.style.setProperty('--dy', (Math.random() - 1) * 250 - 50 + 'px')
+    el.style.setProperty('--rot', Math.random() * 720 - 360 + 'deg')
+    document.body.appendChild(el)
+    el.addEventListener('animationend', () => el.remove())
+  }
 }
 
 function nextRound() {

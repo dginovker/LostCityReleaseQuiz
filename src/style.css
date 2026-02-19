@@ -47,3 +47,17 @@ a:hover {
 .frame { background: url('/img/background.jpg'); }
 .title-bar { background: url('/img/stoneback.gif'); }
 .content { background: rgba(0,0,0,0.5); }
+
+/* Confetti */
+.confetti-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confetti-burst 0.8s ease-out forwards;
+}
+@keyframes confetti-burst {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+}
