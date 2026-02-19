@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "scrape": "tsx scripts/scrape.ts",
     "scrape:historical": "tsx scripts/scrape-historical-images.ts",
+    "scrape:osrs-fallback": "tsx scripts/scrape-osrs-fallback.ts",
     "scrape:lengths": "tsx scripts/scrape-lengths.ts",
     "validate-data": "tsx scripts/validate-data.ts",
     "regenerate-json": "tsx scripts/regenerate-json.ts",
