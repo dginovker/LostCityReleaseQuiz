@@ -11,7 +11,7 @@ export interface ContentEntry {
 }
 
 const allContent: ContentEntry[] = (contentData as ContentEntry[])
-  .filter(e => e.category !== 'music')
+  .filter(e => e.category !== 'music' && e.image)
 
 const nonClueContent: ContentEntry[] = allContent.filter(e => !/^clue scroll/i.test(e.name))
 

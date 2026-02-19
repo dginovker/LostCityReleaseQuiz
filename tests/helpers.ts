@@ -45,9 +45,9 @@ export async function gotoReady(page: Page) {
   await waitReady(page)
 }
 
-// Known test entries — far apart in time
+// Known test entries — far apart in time (must have images)
 export const EARLY = { id: 'quest_cook_s_assistant', date: '2001-01-04' }
-export const LATE = { id: 'quest_desert_treasure', date: '2005-04-18' }
-// Same-day pair
+export const LATE = { id: 'quest_troll_romance', date: '2005-01-05' }
+// Same-day pair (must have images)
 export const SAME_DAY_A = { id: 'quest_cook_s_assistant', date: '2001-01-04' }
-export const SAME_DAY_B = { id: 'quest_demon_slayer_historical', date: '2001-01-04' }
+export const SAME_DAY_B = { id: 'quest_the_restless_ghost', date: '2001-01-04' }
