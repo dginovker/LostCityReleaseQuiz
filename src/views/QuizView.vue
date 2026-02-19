@@ -126,12 +126,12 @@ function nextRound() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-  if (e.key === 'ArrowLeft') {
+  if (e.key === 'ArrowLeft' || e.key === '1') {
     e.preventDefault()
-    focusedIndex.value = 0
-  } else if (e.key === 'ArrowRight') {
+    if (!revealed.value) onPick(0)
+  } else if (e.key === 'ArrowRight' || e.key === '2') {
     e.preventDefault()
-    focusedIndex.value = 1
+    if (!revealed.value) onPick(1)
   } else if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault()
     if (revealed.value) {
