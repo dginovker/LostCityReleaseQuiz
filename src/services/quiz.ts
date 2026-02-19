@@ -21,10 +21,10 @@ export function getDifficulty(a: ContentEntry, b: ContentEntry): number {
 
 /** Map ELO to a preferred difficulty tier index (0-4) */
 function eloToTier(elo: number): number {
-  if (elo < 900) return 0
-  if (elo < 1100) return 1
-  if (elo < 1300) return 2
-  if (elo < 1500) return 3
+  if (elo < 1200) return 0
+  if (elo < 1400) return 1
+  if (elo < 1600) return 2
+  if (elo < 1800) return 3
   return 4
 }
 

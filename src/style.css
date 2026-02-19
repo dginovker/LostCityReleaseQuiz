@@ -14,7 +14,7 @@ body {
 }
 
 a {
-  color: #FFE139;
+  color: #90c040;
   text-decoration: none;
 }
 a:hover {
@@ -43,7 +43,7 @@ a:hover {
 .white { color: #FFF; }
 .orange { color: #ffbb22; }
 
-/* Stone background */
-.stone-bg {
-  background: url('/img/stoneback.gif');
-}
+/* Background */
+.frame { background: url('/img/background.jpg'); }
+.title-bar { background: url('/img/stoneback.gif'); }
+.content { background: rgba(0,0,0,0.5); }

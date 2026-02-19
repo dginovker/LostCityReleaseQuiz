@@ -1,6 +1,6 @@
 <template>
   <div class="page-wrap">
-    <div class="frame b stone-bg">
+    <div class="frame b">
       <!-- Corner GIFs -->
       <img class="corner corner-tl" src="/img/fm_topleft.gif" alt="">
       <img class="corner corner-tr" src="/img/fm_topright.gif" alt="">
@@ -28,6 +28,7 @@
       <div class="footer">
         <span class="white">Fan project &mdash; not affiliated with Jagex</span>
       </div>
+
     </div>
   </div>
 </template>
@@ -89,4 +90,5 @@
   padding: 4px 0;
   font-size: 11px;
 }
+
 </style>

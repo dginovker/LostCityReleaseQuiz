@@ -8,6 +8,7 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "scrape": "tsx scripts/scrape.ts",
+    "scrape:historical": "tsx scripts/scrape-historical-images.ts",
     "validate-data": "tsx scripts/validate-data.ts",
     "regenerate-json": "tsx scripts/regenerate-json.ts",
     "emulators": "firebase emulators:start --only auth,firestore",
