@@ -10,7 +10,12 @@ export interface ContentEntry {
   wikiLength?: number
 }
 
-const allContent: ContentEntry[] = contentData as ContentEntry[]
+const allContent: ContentEntry[] = (contentData as ContentEntry[])
+  .filter(e => e.category !== 'music')
+
+const nonClueContent: ContentEntry[] = allContent.filter(e => !/^clue scroll/i.test(e.name))
+
+const CLUE_ELO_THRESHOLD = 1600
 
 /** Difficulty: 0 (easy, far apart) to 1 (hard, same day) */
 export function getDifficulty(a: ContentEntry, b: ContentEntry): number {
@@ -40,8 +45,8 @@ const TIER_BOUNDS = [0, 0.2, 0.4, 0.6, 0.8, 1.01] as const
 /** Test override — when set, selectPair returns this instead */
 export const _testOverridePair = ref<[ContentEntry, ContentEntry] | null>(null)
 
-function randomEntry(): ContentEntry {
-  return allContent[Math.floor(Math.random() * allContent.length)]!
+function getPool(elo: number): ContentEntry[] {
+  return elo >= CLUE_ELO_THRESHOLD ? allContent : nonClueContent
 }
 
 export function selectPair(elo: number, previousIds: Set<string>): [ContentEntry, ContentEntry] {
@@ -59,13 +64,15 @@ export function selectPair(elo: number, previousIds: Set<string>): [ContentEntry
     if (preferred - d >= 0) tierOrder.push(preferred - d)
   }
 
+  const pool = getPool(elo)
+
   for (const tier of tierOrder) {
     const lo = TIER_BOUNDS[tier]!
     const hi = TIER_BOUNDS[tier + 1]!
 
     for (let attempt = 0; attempt < 50; attempt++) {
-      const a = randomEntry()
-      const b = randomEntry()
+      const a = pool[Math.floor(Math.random() * pool.length)]!
+      const b = pool[Math.floor(Math.random() * pool.length)]!
       if (a.id === b.id) continue
 
       const diff = getDifficulty(a, b)
@@ -80,8 +87,8 @@ export function selectPair(elo: number, previousIds: Set<string>): [ContentEntry
 
   let a: ContentEntry, b: ContentEntry
   do {
-    a = randomEntry()
-    b = randomEntry()
+    a = pool[Math.floor(Math.random() * pool.length)]!
+    b = pool[Math.floor(Math.random() * pool.length)]!
   } while (a.id === b.id)
 
   return [a, b]

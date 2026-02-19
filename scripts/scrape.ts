@@ -127,8 +127,8 @@ function parseReleaseDate(wikitext: string): string | null {
 }
 
 function parseImage(wikitext: string): string | null {
-  const match = wikitext.match(/\|\s*image\s*=\s*\[\[File:([^\]|]+)\]\]/i)
-    || wikitext.match(/\|\s*image\s*=\s*([^\n|{}[\]]+\.(png|gif|jpg|jpeg))/i);
+  const match = wikitext.match(/\|\s*image\d?\s*=\s*\[\[File:([^\]|]+)[^\]]*\]\]/i)
+    || wikitext.match(/\|\s*image\d?\s*=\s*([^\n|{}[\]]+\.(png|gif|jpg|jpeg))/i);
   if (!match) return null;
   return match[1].trim();
 }

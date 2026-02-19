@@ -107,8 +107,8 @@ async function batchFetchWikitext(titles: string[]): Promise<Map<string, string>
 }
 
 function parseImage(wikitext: string): string | null {
-  const match = wikitext.match(/\|\s*image\s*=\s*\[\[File:([^\]|]+)\]\]/i)
-    || wikitext.match(/\|\s*image\s*=\s*([^\n|{}[\]]+\.(png|gif|jpg|jpeg))/i);
+  const match = wikitext.match(/\|\s*image\d?\s*=\s*\[\[File:([^\]|]+)[^\]]*\]\]/i)
+    || wikitext.match(/\|\s*image\d?\s*=\s*([^\n|{}[\]]+\.(png|gif|jpg|jpeg))/i);
   if (!match) return null;
   return match[1].trim().replace(/^File:/i, '');
 }
@@ -140,9 +140,18 @@ async function main() {
   const entries: ContentEntry[] = JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf-8'));
   const manifest: Record<string, ManifestEntry> = JSON.parse(fs.readFileSync(MANIFEST_FILE, 'utf-8'));
 
-  // Filter to only "oldest" source entries
-  const oldestEntries = Object.entries(manifest).filter(([, v]) => v.source === 'oldest');
-  console.log(`Found ${oldestEntries.length} entries with source "oldest" in manifest`);
+  // Find entries that need OSRS images:
+  // 1. "oldest" source entries in manifest (RS3 fallback images)
+  // 2. Entries with no image at all
+  const targetIds = new Set<string>();
+
+  for (const [id, v] of Object.entries(manifest)) {
+    if (v.source === 'oldest') targetIds.add(id);
+  }
+  for (const entry of entries) {
+    if (!entry.image) targetIds.add(entry.id);
+  }
+  console.log(`Found ${targetIds.size} entries needing OSRS images (oldest fallback + missing)`);
 
   // Build id -> name lookup from content.json
   const idToName = new Map<string, string>();
@@ -150,9 +159,9 @@ async function main() {
     idToName.set(entry.id, entry.name);
   }
 
-  // Build title -> ids lookup for the oldest entries
+  // Build title -> ids lookup for target entries
   const titleToIds = new Map<string, string[]>();
-  for (const [id] of oldestEntries) {
+  for (const id of targetIds) {
     const name = idToName.get(id);
     if (!name) continue;
     const existing = titleToIds.get(name);
@@ -246,7 +255,7 @@ async function main() {
   }
 
   const resolvedCount = Object.keys(progress.resolvedImages).length;
-  const notFoundCount = oldestEntries.length - resolvedCount;
+  const notFoundCount = targetIds.size - resolvedCount;
   console.log(`Found ${resolvedCount} OSRS images`);
   console.log(`Not found on OSRS wiki: ${notFoundCount}`);
 
@@ -298,6 +307,19 @@ async function main() {
   progress.downloadedIds = [...downloadedIds];
   fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
   fs.writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2));
+
+  // Update content.json for entries that now have images
+  let contentUpdated = 0;
+  for (const entry of entries) {
+    if (!entry.image && downloadedIds.has(entry.id)) {
+      entry.image = `${entry.id}.webp`;
+      contentUpdated++;
+    }
+  }
+  if (contentUpdated > 0) {
+    fs.writeFileSync(CONTENT_FILE, JSON.stringify(entries, null, 2));
+    console.log(`Updated ${contentUpdated} entries in content.json with new images`);
+  }
 
   console.log(`\nComplete -- replaced: ${downloaded}, not found on OSRS: ${notFoundCount}, errors: ${errors}`);
   console.log(`Manifest updated at ${MANIFEST_FILE}`);
